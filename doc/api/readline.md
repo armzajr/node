@@ -456,9 +456,6 @@ the current position of the cursor down.
 <!-- YAML
 added: v0.1.98
 changes:
-  - version: REPLACEME
-    pr-url: https://github.com/nodejs/node/pull/31318
-    description: The `tabSize` option is supported now.
   - version: v8.3.0, 6.11.4
     pr-url: https://github.com/nodejs/node/pull/13497
     description: Remove max limit of `crlfDelay` option.
@@ -502,8 +499,6 @@ changes:
     can both form a complete key sequence using the input read so far and can
     take additional input to complete a longer key sequence).
     **Default:** `500`.
-  * `tabSize` {integer} The number of spaces a tab is equal to (minimum 1).
-    **Default:** `8`.
 
 The `readline.createInterface()` method creates a new `readline.Interface`
 instance.

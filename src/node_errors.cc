@@ -242,11 +242,12 @@ void AppendExceptionLine(Environment* env,
 }
 
 [[noreturn]] void Assert(const AssertionInfo& info) {
-  std::string name = GetHumanReadableProcessName();
+  char name[1024];
+  GetHumanReadableProcessName(&name);
 
   fprintf(stderr,
           "%s: %s:%s%s Assertion `%s' failed.\n",
-          name.c_str(),
+          name,
           info.file_line,
           info.function,
           *info.function ? ":" : "",

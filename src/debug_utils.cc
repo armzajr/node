@@ -100,14 +100,16 @@ class PosixSymbolDebuggingContext final : public NativeSymbolDebuggingContext {
 
 std::unique_ptr<NativeSymbolDebuggingContext>
 NativeSymbolDebuggingContext::New() {
-  return std::make_unique<PosixSymbolDebuggingContext>();
+  return std::unique_ptr<NativeSymbolDebuggingContext>(
+      new PosixSymbolDebuggingContext());
 }
 
 #else  // HAVE_EXECINFO_H
 
 std::unique_ptr<NativeSymbolDebuggingContext>
 NativeSymbolDebuggingContext::New() {
-  return std::make_unique<NativeSymbolDebuggingContext>();
+  return std::unique_ptr<NativeSymbolDebuggingContext>(
+      new NativeSymbolDebuggingContext());
 }
 
 #endif  // HAVE_EXECINFO_H

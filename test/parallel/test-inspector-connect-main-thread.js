@@ -50,19 +50,28 @@ function startWorker(skipChild, sharedBuffer) {
       console.error(e);
       throw e;
     });
-    // Add 2 promises to the worker, one resolved when a message with a
-    // .doConsoleLog property is received and one resolved when a .messagesSent
-    // property is received.
-    let resolveConsoleRequest;
-    let resolveMessagesSent;
-    worker.onConsoleRequest =
-      new Promise((resolve) => resolveConsoleRequest = resolve);
-    worker.onMessagesSent =
-      new Promise((resolve) => resolveMessagesSent = resolve);
-    worker.on('message', (m) => {
+    worker.once('message', (m) => {
       resolve(worker);
-      if (m.doConsoleLog) resolveConsoleRequest();
-      if (m.messagesSent) resolveMessagesSent(m.messagesSent);
+    });
+  });
+}
+
+function waitForConsoleRequest(worker) {
+  return new Promise((resolve) => {
+    worker.on('message', ({ doConsoleLog }) => {
+      if (doConsoleLog) {
+        resolve();
+      }
+    });
+  });
+}
+
+function waitForMessagesSent(worker) {
+  return new Promise((resolve) => {
+    worker.on('message', ({ messagesSent }) => {
+      if (messagesSent) {
+        resolve(messagesSent);
+      }
     });
   });
 }
@@ -98,9 +107,10 @@ async function main() {
   const arrayBuffer = new Uint8Array(sharedBuffer);
   arrayBuffer[0] = 1;
   const worker = await startWorker(false, sharedBuffer);
-  worker.onConsoleRequest.then(doConsoleLog.bind(null, arrayBuffer));
+  waitForConsoleRequest(worker).then(doConsoleLog.bind(null, arrayBuffer));
+  const workerDonePromise = waitForMessagesSent(worker);
   assert.strictEqual(toDebug(), 400);
-  assert.deepStrictEqual(await worker.onMessagesSent, [
+  assert.deepStrictEqual(await workerDonePromise, [
     'Debugger.enable',
     'Runtime.enable',
     'Debugger.setBreakpointByUrl',
@@ -112,7 +122,7 @@ async function main() {
 async function childMain() {
   // Ensures the worker does not terminate too soon
   parentPort.on('message', () => { });
-  await (await startWorker(true)).onMessagesSent;
+  await waitForMessagesSent(await startWorker(true));
   const session = new Session();
   session.connectToMainThread();
   await post(session, 'Debugger.enable');

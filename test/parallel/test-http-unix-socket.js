@@ -69,7 +69,7 @@ server.listen(common.PIPE, common.mustCall(function() {
   }));
 
   req.on('error', function(e) {
-    assert.fail(e);
+    assert.fail(e.stack);
   });
 
   req.end();

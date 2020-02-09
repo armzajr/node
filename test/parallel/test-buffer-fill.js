@@ -325,12 +325,10 @@ Buffer.alloc(8, '');
   assert.strictEqual(buf.toString(), 'էէէէէ');
 }
 
-// Testing process.binding. Make sure "start" is properly checked for range
-// errors.
-assert.throws(
-  () => { internalBinding('buffer').fill(Buffer.alloc(1), 1, -1, 0, 1); },
-  { code: 'ERR_OUT_OF_RANGE' }
-);
+// Testing process.binding. Make sure "start" is properly checked for -1 wrap
+// around.
+assert.strictEqual(
+  internalBinding('buffer').fill(Buffer.alloc(1), 1, -1, 0, 1), -2);
 
 // Make sure "end" is properly checked, even if it's magically mangled using
 // Symbol.toPrimitive.
@@ -349,12 +347,10 @@ assert.throws(
   });
 }
 
-// Testing process.binding. Make sure "end" is properly checked for range
-// errors.
-assert.throws(
-  () => { internalBinding('buffer').fill(Buffer.alloc(1), 1, 1, -2, 1); },
-  { code: 'ERR_OUT_OF_RANGE' }
-);
+// Testing process.binding. Make sure "end" is properly checked for -1 wrap
+// around.
+assert.strictEqual(
+  internalBinding('buffer').fill(Buffer.alloc(1), 1, 1, -2, 1), -2);
 
 // Test that bypassing 'length' won't cause an abort.
 assert.throws(() => {

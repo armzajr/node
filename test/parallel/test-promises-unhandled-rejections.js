@@ -2,7 +2,6 @@
 const common = require('../common');
 const assert = require('assert');
 const domain = require('domain');
-const { inspect } = require('util');
 
 common.disableCrashOnUnhandledRejection();
 
@@ -15,8 +14,8 @@ const asyncTest = (function() {
 
   function fail(error) {
     const stack = currentTest ?
-      `${inspect(error)}\nFrom previous event:\n${currentTest.stack}` :
-      inspect(error);
+      `${error.stack}\nFrom previous event:\n${currentTest.stack}` :
+      error.stack;
 
     if (currentTest)
       process.stderr.write(`'${currentTest.description}' failed\n\n`);
@@ -45,11 +44,11 @@ const asyncTest = (function() {
   }
 
   return function asyncTest(description, fn) {
-    const stack = inspect(new Error()).split('\n').slice(1).join('\n');
+    const stack = new Error().stack.split('\n').slice(1).join('\n');
     asyncTestQueue.push({
       action: fn,
-      stack,
-      description
+      stack: stack,
+      description: description
     });
     if (!asyncTestsEnabled) {
       asyncTestsEnabled = true;

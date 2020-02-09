@@ -120,11 +120,11 @@ class URL {
   URL(const std::string& input, const std::string& base) :
       URL(input.c_str(), input.length(), base.c_str(), base.length()) {}
 
-  int32_t flags() const {
+  int32_t flags() {
     return context_.flags;
   }
 
-  int port() const {
+  int port() {
     return context_.port;
   }
 

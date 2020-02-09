@@ -157,9 +157,6 @@ class WorkerThreadData {
     {
       Locker locker(isolate);
       Isolate::Scope isolate_scope(isolate);
-      // V8 computes its stack limit the first time a `Locker` is used based on
-      // --stack-size. Reset it to the correct value.
-      isolate->SetStackLimit(w->stack_base_);
 
       HandleScope handle_scope(isolate);
       isolate_data_.reset(CreateIsolateData(isolate,
@@ -253,6 +250,14 @@ void Worker::Run() {
       env_->set_can_call_into_js(false);
       Isolate::DisallowJavascriptExecutionScope disallow_js(isolate_,
           Isolate::DisallowJavascriptExecutionScope::THROW_ON_FAILURE);
+
+      // Grab the parent-to-child channel and render is unusable.
+      MessagePort* child_port;
+      {
+        Mutex::ScopedLock lock(mutex_);
+        child_port = child_port_;
+        child_port_ = nullptr;
+      }
 
       {
         Context::Scope context_scope(env_->context());
@@ -389,13 +394,13 @@ void Worker::CreateEnvMessagePort(Environment* env) {
   HandleScope handle_scope(isolate_);
   Mutex::ScopedLock lock(mutex_);
   // Set up the message channel for receiving messages in the child.
-  MessagePort* child_port = MessagePort::New(env,
-                                             env->context(),
-                                             std::move(child_port_data_));
+  child_port_ = MessagePort::New(env,
+                                 env->context(),
+                                 std::move(child_port_data_));
   // MessagePort::New() may return nullptr if execution is terminated
   // within it.
-  if (child_port != nullptr)
-    env->set_message_port(child_port->object(isolate_));
+  if (child_port_ != nullptr)
+    env->set_message_port(child_port_->object(isolate_));
 }
 
 void Worker::JoinThread() {

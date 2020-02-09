@@ -139,22 +139,19 @@ if (process.env.NODE_TEST_WITH_ASYNC_HOOKS) {
       process._rawDebug();
       throw new Error(`same id added to destroy list twice (${id})`);
     }
-    destroyListList[id] = util.inspect(new Error());
+    destroyListList[id] = new Error().stack;
     _queueDestroyAsyncId(id);
   };
 
   require('async_hooks').createHook({
-    init(id, ty, tr, resource) {
+    init(id, ty, tr, r) {
       if (initHandles[id]) {
         process._rawDebug(
-          `Is same resource: ${resource === initHandles[id].resource}`);
+          `Is same resource: ${r === initHandles[id].resource}`);
         process._rawDebug(`Previous stack:\n${initHandles[id].stack}\n`);
         throw new Error(`init called twice for same id (${id})`);
       }
-      initHandles[id] = {
-        resource,
-        stack: util.inspect(new Error()).substr(6)
-      };
+      initHandles[id] = { resource: r, stack: new Error().stack.substr(6) };
     },
     before() { },
     after() { },
@@ -164,7 +161,7 @@ if (process.env.NODE_TEST_WITH_ASYNC_HOOKS) {
         process._rawDebug();
         throw new Error(`destroy called for same id (${id})`);
       }
-      destroydIdsList[id] = util.inspect(new Error());
+      destroydIdsList[id] = new Error().stack;
     },
   }).enable();
 }
@@ -348,7 +345,7 @@ function _mustCallInner(fn, criteria = 1, field) {
   const context = {
     [field]: criteria,
     actual: 0,
-    stack: util.inspect(new Error()),
+    stack: (new Error()).stack,
     name: fn.name || '<anonymous>'
   };
 
@@ -533,7 +530,7 @@ function expectWarning(nameOrMap, expected, code) {
 function expectsError(validator, exact) {
   return mustCall((...args) => {
     if (args.length !== 1) {
-      // Do not use `assert.strictEqual()` to prevent `inspect` from
+      // Do not use `assert.strictEqual()` to prevent `util.inspect` from
       // always being called.
       assert.fail(`Expected one argument, got ${util.inspect(args)}`);
     }

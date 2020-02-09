@@ -32,11 +32,11 @@ using v8::Value;
 
 static void ProcessTitleGetter(Local<Name> property,
                                const PropertyCallbackInfo<Value>& info) {
-  std::string title = GetProcessTitle("node");
+  char buffer[512];
+  uv_get_process_title(buffer, sizeof(buffer));
   info.GetReturnValue().Set(
-      String::NewFromUtf8(info.GetIsolate(), title.data(),
-                          NewStringType::kNormal, title.size())
-      .ToLocalChecked());
+      String::NewFromUtf8(info.GetIsolate(), buffer, NewStringType::kNormal)
+          .ToLocalChecked());
 }
 
 static void ProcessTitleSetter(Local<Name> property,
